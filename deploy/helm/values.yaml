@@ -1,0 +1,7 @@
+image: {repository: ghcr.io/ayushgawai/snapvol-csi, tag: latest, pullPolicy: IfNotPresent}
+backend: local # local|fsx|azurefiles|gcpfilestore
+dataDir: /var/lib/snapvol
+quotaBytes: 1099511627776
+quotaVolumes: 1000
+controller: {replicas: 1}
+node: {tolerations: []}

@@ -1,0 +1,12 @@
+_build/
+*.log
+/snapvol-csi
+/snapvol-controlplane
+/snapvol-bench
+data/
+.gopath/
+.gocache/
+.goroot-extract/
+go.tgz
+fetch_go.py
+run.py

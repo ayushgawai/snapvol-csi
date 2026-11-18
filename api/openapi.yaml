@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info: {title: snapvol control plane, version: 0.1.0}
+paths:
+  /v1/volumes:
+    get: {summary: List volumes, responses: {'200': {description: OK}}}
+    post:
+      summary: Create a volume (idempotent by request_id; clone with snapshot_id)
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateVolume'}}}}
+      responses: {'201': {description: Created}, '409': {description: Name exists with different parameters}, '429': {description: Quota exceeded}}
+  /v1/volumes/{id}:
+    get: {summary: Get a volume, parameters: [{$ref: '#/components/parameters/Id'}], responses: {'200': {description: OK}, '404': {description: Not found}}}
+    delete: {summary: Delete a volume (idempotent), parameters: [{$ref: '#/components/parameters/Id'}], responses: {'204': {description: Deleted}}}
+  /v1/volumes/{id}/expand:
+    post: {summary: Expand a volume, parameters: [{$ref: '#/components/parameters/Id'}], responses: {'200': {description: OK}, '404': {description: Not found}}}
+  /v1/snapshots:
+    get: {summary: List snapshots, responses: {'200': {description: OK}}}
+    post:
+      summary: Create a snapshot (idempotent by request_id)
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateSnapshot'}}}}
+      responses: {'201': {description: Created}, '404': {description: Source volume not found}}
+  /v1/snapshots/{id}:
+    delete: {summary: Delete a snapshot (idempotent), parameters: [{$ref: '#/components/parameters/Id'}], responses: {'204': {description: Deleted}}}
+  /v1/schedules:
+    get: {summary: List snapshot schedules, responses: {'200': {description: OK}}}
+    post:
+      summary: Create a snapshot schedule (executed by the async job queue)
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/Schedule'}}}}
+      responses: {'201': {description: Created}}
+  /v1/jobs:
+    get: {summary: List async jobs, responses: {'200': {description: OK}}}
+  /v1/jobs/{id}:
+    get: {summary: Get a job, parameters: [{$ref: '#/components/parameters/Id'}], responses: {'200': {description: OK}, '404': {description: Not found}}}
+  /healthz: {get: {summary: Liveness, responses: {'200': {description: OK}}}}
+  /readyz: {get: {summary: Readiness, responses: {'200': {description: OK}}}}
+  /metrics: {get: {summary: Prometheus metrics, responses: {'200': {description: OK}}}}
+components:
+  parameters:
+    Id: {name: id, in: path, required: true, schema: {type: string}}
+  schemas:
+    CreateVolume: {type: object, required: [name], properties: {request_id: {type: string}, name: {type: string}, size_bytes: {type: integer, format: int64}, snapshot_id: {type: string}}}
+    CreateSnapshot: {type: object, required: [name, volume_id], properties: {request_id: {type: string}, name: {type: string}, volume_id: {type: string}}}
+    Schedule: {type: object, required: [volume_id, interval_seconds], properties: {volume_id: {type: string}, name_prefix: {type: string}, interval_seconds: {type: integer, format: int64}}}
